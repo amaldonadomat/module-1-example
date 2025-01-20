@@ -9,7 +9,7 @@ on:
 
 jobs:
   validate:
-    uses: amaldonadomat/centralized-workflows-example/.github/workflows/python-validation.yml@main
+    uses: amaldonadomat/centralized-workflows-example/.github/workflows/python-validation.yaml@main
     with:
       python-version: "3.11"
       script-path: "python-scripts/factorial.py"
