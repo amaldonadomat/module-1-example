@@ -1,0 +1,28 @@
+name: Module Deployment
+
+on:
+  workflow_call:
+    inputs:
+      country:
+        description: "Country to deploy the module"
+        type: choice
+        options:
+        - Antartida
+        - Vanuatu
+        - Sao Tome and Principe
+        - Trinidad and Tobago
+
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Install dependencies
+      - name: Deployment of the package
+        run: |
+          echo "The package is being deployed in ${{input.country}}"
+
