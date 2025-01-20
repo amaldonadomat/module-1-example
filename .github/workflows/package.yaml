@@ -1,0 +1,16 @@
+name: Package and Publish
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  validate:
+    uses: amaldonadomat/centralized-workflows-example/.github/workflows/python-packaging.yaml@main
+    with:
+      python-version: "3.11"
+      package-path: "base-python-package"
+
+
