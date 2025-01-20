@@ -1,7 +1,7 @@
 name: Module Deployment
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       country:
         description: "Country to deploy the module"
