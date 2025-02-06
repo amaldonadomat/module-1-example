@@ -12,7 +12,7 @@ def factorial(n):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Uso: python my_script.py <número>  ")
+        print("Uso: python my_script.py <número> ")
         sys.exit(1)
 
     try:
