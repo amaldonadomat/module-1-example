@@ -29,10 +29,10 @@ jobs:
           COUNTRY="${{ github.event.inputs.COUNTRY }}"
           ENV="${{ github.event.inputs.ENV }}"
 
-          ACCOUNT=$(yq e ".${CLIENT}.${COUNTRY}.${ENV}.account_id" $file)
-          REGION=$(yq e ".${CLIENT}.${COUNTRY}.${ENV}.region" $file)
-          BUCKET=$(yq e ".${CLIENT}.${COUNTRY}.${ENV}.tf_bucket" $file)
-          TABLE=$(yq e ".${CLIENT}.${COUNTRY}.${ENV}.tf_lock_table" $file)
+          ACCOUNT=$(yq e ".\"${CLIENT}\".\"${COUNTRY}\".\"${ENV}\".account_id" "$file")
+          REGION=$(yq e ".\"${CLIENT}\".\"${COUNTRY}\".\"${ENV}\".region" "$file")
+          BUCKET=$(yq e ".\"${CLIENT}\".\"${COUNTRY}\".\"${ENV}\".tf_bucket" "$file")
+          TABLE=$(yq e ".\"${CLIENT}\".\"${COUNTRY}\".\"${ENV}\".tf_lock_table" "$file")
 
           # Validación
           if [ "$ACCOUNT" == "null" ] || [ "$REGION" == "null" ] || [ "$BUCKET" == "null" ] || [ "$TABLE" == "null" ]; then
