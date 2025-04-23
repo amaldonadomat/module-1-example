@@ -1,0 +1,62 @@
+name: Read config from yaml
+
+on:
+  workflow_dispatch:
+    inputs:
+      CLIENT:
+        description: "Cliente (ej. cliente1)"
+        required: true
+      COUNTRY:
+        description: "País (ej. spain)"
+        required: true
+      ENV:
+        description: "Entorno (ej. dev, pre, pro)"
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar yq
+        run: sudo apt-get update && sudo apt-get install -y yq
+
+      - name: Cargar configuración operativa
+        run: |
+          file="config/config.yaml"
+          CLIENT="${{ github.event.inputs.CLIENT }}"
+          COUNTRY="${{ github.event.inputs.COUNTRY }}"
+          ENV="${{ github.event.inputs.ENV }}"
+
+          ACCOUNT=$(yq e ".${CLIENT}.${COUNTRY}.${ENV}.account_id" $file)
+          REGION=$(yq e ".${CLIENT}.${COUNTRY}.${ENV}.region" $file)
+          BUCKET=$(yq e ".${CLIENT}.${COUNTRY}.${ENV}.tf_bucket" $file)
+          TABLE=$(yq e ".${CLIENT}.${COUNTRY}.${ENV}.tf_lock_table" $file)
+
+          # Validación
+          if [ "$ACCOUNT" == "null" ] || [ "$REGION" == "null" ] || [ "$BUCKET" == "null" ] || [ "$TABLE" == "null" ]; then
+            echo "❌ Configuración no encontrada para ${CLIENT}.${COUNTRY}.${ENV} en $file"
+            exit 1
+          fi
+
+          # Mostrar los valores leídos
+          echo "✅ Configuración encontrada:"
+          echo "  AWS_ACCOUNT_ID: $ACCOUNT"
+          echo "  AWS_REGION:     $REGION"
+          echo "  TF_BUCKET:      $BUCKET"
+          echo "  TF_TABLE:       $TABLE"
+          echo "  CLIENT:         $CLIENT"
+          echo "  COUNTRY:        $COUNTRY"
+          echo "  ENV:            $ENV"
+
+          # Exportar variables al entorno
+          echo "AWS_ACCOUNT_ID=$ACCOUNT" >> $GITHUB_ENV
+          echo "AWS_REGION=$REGION" >> $GITHUB_ENV
+          echo "TF_BUCKET=$BUCKET" >> $GITHUB_ENV
+          echo "TF_TABLE=$TABLE" >> $GITHUB_ENV
+          echo "CLIENT=$CLIENT" >> $GITHUB_ENV
+          echo "COUNTRY=$COUNTRY" >> $GITHUB_ENV
+          echo "ENV=$ENV" >> $GITHUB_ENV
+
+

@@ -1,0 +1,18 @@
+client1:
+  spain:
+    dev:
+      account_id: "111111111111"
+      region: "eu-west-1"
+      tf_bucket: "client1-spain-dev-tfstate"
+      tf_lock_table: "client1-spain-dev-locks"
+    pre:
+      account_id: "22222222222222"
+      region: "eu-west-1"
+      tf_bucket: "client1-spain-pre-tfstate"
+      tf_lock_table: "client1-spain-pre-locks"
+  mexico:
+    dev:
+      account_id: "33333333333333"
+      region: "us-east-1"
+      tf_bucket: "client1-mexico-dev-tfstate"
+      tf_lock_table: "client1-mexico-dev-locks"
