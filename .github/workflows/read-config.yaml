@@ -19,8 +19,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Instalar yq
-        run: sudo apt-get update && sudo apt-get install -y yq
+      - name: Instalar yq (Go version)
+        run: |
+          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
+
 
       - name: Cargar configuración operativa
         run: |
