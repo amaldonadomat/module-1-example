@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -15,8 +18,8 @@ jobs:
 
       - name: Set up Git
         run: |
-          git config --global user.email "bot@example.com"
-          git config --global user.name "bot"
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
 
       - name: Get last release
         id: get_last_release
@@ -82,6 +85,11 @@ jobs:
             exit 1
           fi
 
+      - name: Push new tag
+        run: |
+          git tag v${{ env.FINAL_VERSION }}
+          git push origin v${{ env.FINAL_VERSION }}
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -89,7 +97,3 @@ jobs:
           name: Release v${{ env.FINAL_VERSION }}
           generate_release_notes: true
 
-      - name: Push new tag
-        run: |
-          git tag v${{ env.FINAL_VERSION }}
-          git push origin v${{ env.FINAL_VERSION }}
