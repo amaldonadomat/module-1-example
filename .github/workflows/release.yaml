@@ -1,0 +1,85 @@
+name: Release pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Git
+        run: |
+          git config --global user.email "bot@example.com"
+          git config --global user.name "bot"
+
+      - name: Get last release
+        id: get_last_release
+        run: |
+          # get last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          echo "LAST_TAG=$LAST_TAG" >> $GITHUB_ENV
+          echo "Último tag encontrado: $LAST_TAG"
+
+      - name: Extract branch from commit message
+        id: extract_branch
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MSG"
+
+          if [[ "$COMMIT_MSG" =~ Merge\ pull\ request.*from\ ([^/]+)/([^ ]+) ]]; then
+            ORIGIN_BRANCH="${BASH_REMATCH[2]}"
+          else
+            ORIGIN_BRANCH=""
+          fi
+          echo "ORIGIN_BRANCH=$ORIGIN_BRANCH" >> $GITHUB_ENV
+
+      - name: Check if release or hotfix
+        id: check_type
+        run: |
+          if [[ "${{ env.ORIGIN_BRANCH }}" =~ ^release/v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "TYPE=release" >> $GITHUB_ENV
+            echo "VERSION=${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}" >> $GITHUB_ENV
+          elif [[ "${{ env.ORIGIN_BRANCH }}" =~ ^hotfix/v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "TYPE=hotfix" >> $GITHUB_ENV
+            echo "VERSION=${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}" >> $GITHUB_ENV
+          else
+            echo "TYPE=none" >> $GITHUB_ENV
+          fi
+
+      - name: Determine version to release
+        id: determine_version
+        run: |
+          if [[ "${{ env.LAST_TAG }}" == "" ]]; then
+            # No hay ningún release previo
+            echo "FIRST_RELEASE=true" >> $GITHUB_ENV
+            echo "FINAL_VERSION=1.0.0" >> $GITHUB_ENV
+          elif [[ "${{ env.TYPE }}" == "hotfix" ]]; then
+            # Hotfix: Bump patch
+            IFS='.' read -r MAJOR MINOR PATCH <<< "${{ env.VERSION }}"
+            PATCH=$((PATCH + 1))
+            echo "FINAL_VERSION=${MAJOR}.${MINOR}.${PATCH}" >> $GITHUB_ENV
+          elif [[ "${{ env.TYPE }}" == "release" ]]; then
+            # Release normal
+            echo "FINAL_VERSION=${{ env.VERSION }}" >> $GITHUB_ENV
+          else
+            echo "No release or hotfix branch detected, skipping..."
+            exit 1
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.FINAL_VERSION }}
+          name: Release v${{ env.FINAL_VERSION }}
+          generate_release_notes: true
+
+      - name: Push new tag
+        run: |
+          git tag v${{ env.FINAL_VERSION }}
+          git push origin v${{ env.FINAL_VERSION }}
