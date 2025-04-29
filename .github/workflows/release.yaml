@@ -34,10 +34,11 @@ jobs:
 
           if [[ "$COMMIT_MSG" =~ Merge\ pull\ request.*from\ ([^/]+)/([^ ]+) ]]; then
             ORIGIN_BRANCH="${BASH_REMATCH[2]}"
+            echo "ORIGIN_BRANCH=$ORIGIN_BRANCH" >> $GITHUB_ENV
           else
-            ORIGIN_BRANCH=""
+            echo "No valid branch found, skipping..."
+            echo "ORIGIN_BRANCH=none" >> $GITHUB_ENV
           fi
-          echo "ORIGIN_BRANCH=$ORIGIN_BRANCH" >> $GITHUB_ENV
 
       - name: Check if release or hotfix
         id: check_type
@@ -50,11 +51,18 @@ jobs:
             echo "VERSION=${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}" >> $GITHUB_ENV
           else
             echo "TYPE=none" >> $GITHUB_ENV
+            echo "VERSION=none" >> $GITHUB_ENV
           fi
 
       - name: Determine version to release
         id: determine_version
         run: |
+
+          if [[ "${{ env.ORIGIN_BRANCH }}" == "none" ]]; then
+            echo "No release or hotfix branch detected, skipping workflow."
+            exit 0
+          fi
+
           if [[ "${{ env.LAST_TAG }}" == "" ]]; then
             # No hay ningún release previo
             echo "FIRST_RELEASE=true" >> $GITHUB_ENV
