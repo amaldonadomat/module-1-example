@@ -34,11 +34,13 @@ jobs:
 
           if [[ "$COMMIT_MSG" =~ Merge\ pull\ request.*from\ ([^/]+)/([^ ]+) ]]; then
             ORIGIN_BRANCH="${BASH_REMATCH[2]}"
-            echo "ORIGIN_BRANCH=$ORIGIN_BRANCH" >> $GITHUB_ENV
           else
-            echo "No valid branch found, skipping..."
-            echo "ORIGIN_BRANCH=none" >> $GITHUB_ENV
+            ORIGIN_BRANCH="none"
           fi
+
+          echo "ORIGIN_BRANCH<<EOF" >> $GITHUB_ENV
+          echo "$ORIGIN_BRANCH" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Check if release or hotfix
         id: check_type
