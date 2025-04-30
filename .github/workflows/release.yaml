@@ -46,7 +46,7 @@ jobs:
           echo "Branch: $ORIGIN_BRANCH"
           echo "ORIGIN_BRANCH=$ORIGIN_BRANCH" >> $GITHUB_ENV
 
-      - name: Check if release or hotfix
+      - name: Calculate new version
         id: check_type
         run: |
           if [[ "${{ env.ORIGIN_BRANCH }}" =~ "release\/v([0-9]+\.[0-9]+\.[0-9]+)$" ]]; then
@@ -66,28 +66,10 @@ jobs:
             exit 1
           fi
 
-      - name: Determine version to release
-        id: determine_version
-        run: |
-          if [[ "${{ env.TYPE }}" == "hotfix" ]]; then
-            # Hotfix: Bump patch
-            IFS='.' read -r MAJOR MINOR PATCH <<< "${{ env.VERSION }}"
-            PATCH=$((PATCH + 1))
-            echo "FINAL_VERSION=${MAJOR}.${MINOR}.${PATCH}" >> $GITHUB_ENV
-            echo "Hotfix merged, bumped patch version to: $FINAL_VERSION"
-          elif [[ "${{ env.TYPE }}" == "release" ]]; then
-            # Release normal
-            echo "FINAL_VERSION=${{ env.VERSION }}" >> $GITHUB_ENV
-            echo "Merged release into main. The release version is $FINAL_VERSION"
-          else
-            echo "Could not determine new version, skipping..."
-            exit 1
-          fi
-
       - name: Push new tag
         run: |
-          git tag v${{ env.FINAL_VERSION }}
-          git push origin v${{ env.FINAL_VERSION }}
+          git tag v${{ env.VERSION }}
+          git push origin v${{ env.VERSION }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
