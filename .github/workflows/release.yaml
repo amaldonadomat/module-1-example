@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Git
         run: |
@@ -33,33 +35,36 @@ jobs:
         run: |
           COMMIT_MSG=$(git log -1 --pretty=%B)
           echo "Commit message: $COMMIT_MSG"
-
-          if [[ "$COMMIT_MSG" =~ Merge\ pull\ request.*from\ ([^/]+)/([^ ]+) ]]; then
-            ORIGIN_BRANCH="${BASH_REMATCH[2]}"
+          if [[ "$COMMIT_MSG" =~ "Merge pull request" ]]; then
+            ORIGIN_BRANCH=$(echo "$COMMIT_MSG" | grep -oE 'from [^ ]+' | awk '{print $2}')
           else
             ORIGIN_BRANCH="none"
+            echo "Es un push directo a main, skipping release"
+            exit 1
           fi
 
-          echo "ORIGIN_BRANCH<<EOF" >> $GITHUB_ENV
           echo "Branch: $ORIGIN_BRANCH"
-          echo "$ORIGIN_BRANCH" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          echo "ORIGIN_BRANCH=$ORIGIN_BRANCH" >> $GITHUB_ENV
 
       - name: Check if release or hotfix
         id: check_type
         run: |
-          if [[ "${{ env.ORIGIN_BRANCH }}" =~ ^release/v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+          if [[ "${{ env.ORIGIN_BRANCH }}" =~ ^release/v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
             echo "TYPE=release" >> $GITHUB_ENV
-            echo "VERSION=${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}" >> $GITHUB_ENV
-            echo "Detected release"
-          elif [[ "${{ env.ORIGIN_BRANCH }}" =~ ^hotfix/v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "VERSION="${BASH_REMATCH[1]}"" >> $GITHUB_ENV
+            echo "Detected release, using the version "
+          elif [[ "${{ env.ORIGIN_BRANCH }}" =~ ^hotfix/ ]]; then
             echo "TYPE=hotfix" >> $GITHUB_ENV
             echo "VERSION=${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}" >> $GITHUB_ENV
-            echo "Detected hotfix merge"
+            IFS='.' read -r MAJOR MINOR PATCH <<< "${{ env.LAST_TAG }}"
+            PATCH=$((PATCH + 1))
+            echo "VERSION=${MAJOR}.${MINOR}.${PATCH}" >> $GITHUB_ENV
+            echo "Its a hotfix, new release version is $VERSION"
           else
             echo "TYPE=none" >> $GITHUB_ENV
             echo "VERSION=none" >> $GITHUB_ENV
-            echo "Neither hotfix or release"
+            echo "Not a clear version on the release, nor a hotfix, skipping"
+            exit 1
           fi
 
       - name: Determine version to release
@@ -76,7 +81,7 @@ jobs:
             echo "FINAL_VERSION=${{ env.VERSION }}" >> $GITHUB_ENV
             echo "Merged release into main. The release version is $FINAL_VERSION"
           else
-            echo "No release or hotfix branch detected, skipping..."
+            echo "Could not determine new version, skipping..."
             exit 1
           fi
 
