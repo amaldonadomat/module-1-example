@@ -49,11 +49,11 @@ jobs:
       - name: Calculate new version
         id: check_type
         run: |
-          if [[ "${{ env.ORIGIN_BRANCH }}" =~ "release\/v([0-9]+\.[0-9]+\.[0-9]+)$" ]]; then
+          if [[ "${{ env.ORIGIN_BRANCH }}" =~ release/v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
             echo "TYPE=release" >> $GITHUB_ENV
             echo "VERSION="${BASH_REMATCH[1]}"" >> $GITHUB_ENV
             echo "Detected release, using the version $VERSION"
-          elif [[ "${{ env.ORIGIN_BRANCH }}" =~ "hotfix\/" ]]; then
+          elif [[ "${{ env.ORIGIN_BRANCH }}" =~ hotfix/ ]]; then
             echo "TYPE=hotfix" >> $GITHUB_ENV
             IFS='.' read -r MAJOR MINOR PATCH <<< "${{ env.LAST_TAG }}"
             PATCH=$((PATCH + 1))
