@@ -96,4 +96,3 @@ jobs:
           tag_name: v${{ env.FINAL_VERSION }}
           name: Release v${{ env.FINAL_VERSION }}
           generate_release_notes: true
-
