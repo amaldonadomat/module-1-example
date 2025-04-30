@@ -51,7 +51,7 @@ jobs:
         run: |
           if [[ "${{ env.ORIGIN_BRANCH }}" =~ release/v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
             echo "TYPE=release" >> $GITHUB_ENV
-            echo "VERSION="${BASH_REMATCH[1]}"" >> $GITHUB_ENV
+            echo "VERSION="v${BASH_REMATCH[1]}"" >> $GITHUB_ENV
             echo "Detected release, using the version $VERSION"
           elif [[ "${{ env.ORIGIN_BRANCH }}" =~ hotfix/ ]]; then
             echo "TYPE=hotfix" >> $GITHUB_ENV
@@ -68,13 +68,13 @@ jobs:
 
       - name: Push new tag
         run: |
-          git tag v${{ env.VERSION }}
-          git push origin v${{ env.VERSION }}
+          git tag ${{ env.VERSION }}
+          git push origin ${{ env.VERSION }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ env.VERSION }}
-          name: Release v${{ env.VERSION }}
+          tag_name: ${{ env.VERSION }}
+          name: Release ${{ env.VERSION }}
           generate_release_notes: true
 
