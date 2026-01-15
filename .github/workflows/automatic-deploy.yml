@@ -1,0 +1,66 @@
+name: Test Environment Detection
+
+run-name: Testing deployment to ${{ github.ref_name == 'develop' && 'dev' || startsWith(github.ref_name, 'release/') && 'pre' || github.ref_name == 'main' && 'pro' || 'unknown' }} environment
+
+on:
+  push:
+    branches:
+      - develop
+      - release/*
+      - main
+    paths-ignore:
+      - .github/**
+  
+  create:
+    branches:
+      - release/*
+
+jobs:
+  test-environment:
+    runs-on: ubuntu-latest
+    
+    # Solo ejecuta si:
+    # - Es push con cambios (ya filtrado por paths-ignore)
+    # - O es creación de rama release
+    if: github.event_name == 'push' || (github.event_name == 'create' && startsWith(github.ref_name, 'release/'))
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Detect environment
+        run: |
+          echo "🔍 Event details:"
+          echo "Event name: ${{ github.event_name }}"
+          echo "Branch name: ${{ github.ref_name }}"
+          echo "Full ref: ${{ github.ref }}"
+          echo ""
+          echo "🎯 Environment detection:"
+          if [[ "${{ github.ref_name }}" == "develop" ]]; then
+            echo "Environment: DEV"
+          elif [[ "${{ github.ref_name }}" == main* ]]; then
+            echo "Environment: PRO"
+          elif [[ "${{ github.ref_name }}" == release/* ]]; then
+            echo "Environment: PRE"
+          else
+            echo "Environment: UNKNOWN"
+          fi
+          echo ""
+          echo "🚀 This would deploy to: ${{ github.ref_name == 'develop' && 'dev' || startsWith(github.ref_name, 'release/') && 'pre' || github.ref_name == 'main' && 'pro' || 'unknown' }}"
+
+      - name: Simulate deployment
+        run: |
+          echo "🎭 Simulating deployment..."
+          echo "Repository: ${{ github.event.repository.name }}"
+          echo "Commit SHA: ${{ github.sha }}"
+          echo "Actor: ${{ github.actor }}"
+          echo ""
+          echo "✅ Deployment simulation completed!"
+
+      - name: Debug event payload (for troubleshooting)
+        if: github.event_name == 'create'
+        run: |
+          echo "🐛 Debug info for create event:"
+          echo "Ref type: ${{ github.event.ref_type }}"
+          echo "Ref: ${{ github.event.ref }}"
+          echo "Master branch: ${{ github.event.master_branch }}"
