@@ -1,0 +1,50 @@
+name: Create Release Branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., v1.2.3)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  create-branch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Set up Git
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
+
+      - name: Check if branch exists
+        id: check_branch
+        run: |
+          BRANCH_NAME="release/${{ inputs.version }}"
+
+          if git ls-remote --heads origin "$BRANCH_NAME" | grep -q "$BRANCH_NAME"; then
+            echo "❌ Error: Branch $BRANCH_NAME already exists"
+            exit 1
+          else
+            echo "✅ Branch $BRANCH_NAME does not exist, proceeding..."
+          fi
+
+      - name: Create release branch
+        run: |
+          BRANCH_NAME="release/${{ inputs.version }}"
+          echo "Creating branch: $BRANCH_NAME from develop"
+
+          git checkout -b "$BRANCH_NAME"
+          git push origin "$BRANCH_NAME"
+
+          echo "✅ Branch $BRANCH_NAME created successfully from develop"
